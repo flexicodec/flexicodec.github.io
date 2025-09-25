@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <title>FlexiCodec Demo</title>
+  <script src="./static/tailwind.js"></script>
+  <script src="./static/vue.global.js"></script>
+  <script src="./static/flowbite.min.js"></script>
+  <script src="./static/d3.v7.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <style type="text/tailwindcss">
+    /* Scrollable table container */
+    .scrollable-table {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid #ccc; /* Optional: Add a border for better visibility */
+    }
+  
+    /* Table styling */
+    .scrollable-table table {
+      width: auto; /* Let the table expand based on content */
+      min-width: 100%; /* Ensure the table is at least as wide as the container */
+      border-collapse: collapse; /* Optional: Merge borders for a cleaner look */
+    }
+  
+    /* Column styling */
+    .scrollable-table th,
+    .scrollable-table td {
+      min-width: 200px; /* Set a minimum width for each column */
+      padding: 12px; /* Add padding for better spacing */
+      text-align: center; /* Center-align content */
+      white-space: nowrap; /* Prevent text from wrapping */
+      border: 1px solid #ddd; /* Optional: Add borders to cells */
+    }
+
+    /* Text column specific styling */
+    #tts-general-table td:first-child {
+      white-space: normal; /* Allow text wrapping for the first column */
+      text-align: left; /* Left align text for better readability */
+      max-width: 150px; /* Set a maximum width for the text column */
+      word-wrap: break-word; /* Break long words if necessary */
+    }
+  
+    /* Optional: Add a hover effect to rows */
+    .scrollable-table tr:hover {
+      background-color: #f5f5f5;
+    }
+  
+    @tailwind base;
+    @tailwind components;
+    @tailwind utilities;
+  
+    @layer base {
+      a[href^="http"] {
+        @apply text-blue-500;
+      }
+  
+      a:hover {
+        @apply text-blue-700 underline;
+      }
+  
+      h1 {
+        @apply mb-6 text-4xl font-bold text-gray-900 text-center;
+      }
+  
+      h2 {
+        @apply mb-3 pt-4 text-2xl font-bold tracking-tight text-gray-900;
+      }
+  
+      h4 {
+        @apply mb-4 pt-12 text-3xl font-semibold text-gray-900;
+      }
+  
+      h5 {
+        @apply mb-3 pt-4 text-2xl font-bold tracking-tight text-gray-900;
+      }
+  
+      p {
+        @apply mb-4 font-normal text-gray-900 leading-relaxed;
+      }
+    }
+  
+    @layer components {
+      .list-select {
+        @apply block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0;
+      }
+  
+      .tooltip {
+        position: absolute;
+        text-align: center;
+        padding: 8px;
+        font: 12px sans-serif;
+        background: lightsteelblue;
+        border: 0;
+        border-radius: 8px;
+        pointer-events: none;
+        opacity: 0;
+      }
+  
+      .text-p {
+        @apply mb-4 font-normal text-gray-900 leading-relaxed;
+      }
+  
+      .author {
+        @apply font-medium mr-2 pb-1 text-gray-900 inline-block;
+      }
+  
+      .affiliation {
+        @apply font-medium mr-2 pb-1 text-gray-900 block;
+      }
+    }
+  </style>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {}
+        }
+      }
+    }
+  </script>
+</head>
+
+<body>
+  <div id="app">
+
+    <nav class="bg-white fixed w-full z-20 top-0 start-0 border-gray-200 border-b border-gray-200"
+      style="font-weight: bold;">
+      <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-3">
+        <button data-collapse-toggle="navbar-default" type="button"
+          class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200"
+          aria-controls="navbar-default" aria-expanded="false">
+          <span class="sr-only">Open main menu</span>
+          <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M1 1h15M1 7h15M1 13h15" />
+          </svg>
+        </button>
+
+        <div class="hidden w-full md:block md:w-auto ml-auto" id="navbar-default">
+          <ul
+            class="font-medium flex flex-col p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-gray-50 md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0 md:bg-white">
+            <li>
+              <a href="#home" class="list-select"><b>Home</b></a>
+            </li>
+            <li>
+              <a href="#architecture" class="list-select"><b>Architecture</b></a>
+            </li>
+            <li>
+              <a href="#audio-quality" class="list-select"><b>Audio-Quality</b></a>
+            </li>
+            <li>
+              <a href="#decoding-rvq1" class="list-select"><b>Semantic-Content</b></a>
+            </li>
+            <li>
+              <a href="#flexicodec-tts" class="list-select"><b>FlexiCodec-TTS</b></a>
+            </li>
+            <!-- <li>
+              <a href="#open-source" class="list-select"><b>Open-Source</b></a>
+            </li> -->
+            <!-- <li>
+              <a href="#citation" class="list-select"><b>Citation</b></a>
+            </li> -->
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+
+    <div class="p-5 md:p-0 mt-16 max-w-screen-xl mx-auto">
+      <div class="p-6" id="home">
+        <div class="mt-8 mb-8">
+          <h1>FlexiCodec: A Dynamic Neural Audio Codec for Low Frame Rates</h1>
+        </div>
+        <div>
+          <center>Anonymous ICLR 2026 Submission</center>
+        </div>
+        <!-- <div class="flex gap-2 justify-center flex-wrap">
+          <a href="https://openreview.net/attachment?id=P7VkjAVClZ&name=pdf" target="_blank">
+            <img src="https://img.shields.io/badge/arXiv-Paper-brightgreen?style=flat-square">
+          </a>
+          <!-- <a href="https://github.com/jiaqili3/DualCodec" target="_blank">
+            <img src="https://img.shields.io/badge/Github-Dev_Release-pink?logo=Github&style=flat-square">
+            <img src="https://img.shields.io/badge/GitHub.io-Demo_Page-blue?logo=Github&style=flat-square"> -->
+          <!-- </a> -->
+          <!-- <a href="https://github.com/jiaqili3/DualCodec" target="_blank">
+            <img src="https://img.shields.io/badge/Amphion-Stable_Release-blue?logo=Github&style=flat-square">
+          </a> -->
+          <!-- <a href="https://dualcodec.github.io/" target="_blank">
+            <img src="https://img.shields.io/badge/WebPage-Demo-red">
+          </a> -->
+        <!-- </div> -->
+
+        <div class="max-w-[900px] mx-auto mt-8 mb-16">
+          <h2>Abstract</h2>
+          <p class="text-p">
+            Neural audio codecs are foundational to speech language models. It is expected to have a low frame rate and decoupled semantic and acoustic information. A lower frame rate codec can reduce the computational cost of speech language models by shortening the sequence length. Recent studies have developed 12.5Hz low-frame-rate audio codecs, but even lower frame rate codecs remain underexplored. We find that a major challenge for very low frame rate tokens is missing semantic information. This paper introduces <b>FlexiCodec</b> to address this limitation. <b>FlexiCodec</b> improves semantic preservation with a <b>dynamic frame rate</b> approach and introduces a novel architecture featuring an <b>ASR feature-assisted dual stream</b> encoding and Transformer bottlenecks. With <b>dynamic frame rates</b>, it uses less frames at information-sparse regions through adaptively merging semantically similar frames. A <b>dynamic frame rate</b> also allows FlexiCodec to support inference-time <b>controllable frame rates</b> between 3Hz and 12.5Hz. Experiments on <b>6.25Hz, 8.3Hz and 12.5Hz</b> average frame rates confirm that FlexiCodec excels over baseline systems in semantic information preservation and delivers a high audio reconstruction quality. We also validate the effectiveness of FlexiCodec in language model-based TTS.</p>
+        </div>
+
+        <div class="mt-8 mb-8" id="architecture">
+          <h4>Architecture of FlexiCodec</h4>
+          <div class="flex mx-auto justify-center max-w-4xl py-8">
+            <img src="flexicodec_architetcure.png" style="max-width: 100%; height: auto; width: 90%;"></img>
+          </div>
+          <p>
+            The model encodes speech through two streams. The Frame Merging Modules dynamically merge semantically-similar adjacent frames together, reducing the 12.5Hz features into lower frame rates. The Frame Unmerging Module restores a 12.5Hz fixed frame rate. The model is trained end to end.
+            A high-level comparison between audio tokenization methods is as follows.
+          </p>
+        </div>
+
+        <div class="w-full overflow-x-auto">
+          <div class="relative w-[900px] mx-auto text-sm text-left rtl:text-right text-gray-900">
+            <table style="table-layout: fixed; width: 100%;">
+              <caption style="caption-side: top; text-align: center; font-weight: bold; margin-bottom: 10px;">Table 1: Comparison of different audio tokenization methods and their properties.</caption>
+              <thead>
+                <tr>
+                  <th style="text-align: center; border: 1px solid #ddd; padding: 8px; width: 15%;">Method</th>
+                  <th style="text-align: center; border: 1px solid #ddd; padding: 8px; width: 12%;">Frame Rate (Hz)</th>
+                  <th style="text-align: center; border: 1px solid #ddd; padding: 8px; width: 12%;">Dynamic Rate</th>
+                  <th style="text-align: center; border: 1px solid #ddd; padding: 8px; width: 15%;">Controllable Rate</th>
+                  <th style="text-align: center; border: 1px solid #ddd; padding: 8px; width: 20%;">Semantic Augmentation</th>
+                  <th style="text-align: center; border: 1px solid #ddd; padding: 8px; width: 15%;">Has TTS Results?</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="background-color: #f4f4f4; border: 1px solid #ddd; padding: 8px;"><b>DAC</b></td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">75</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">✗</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">✗</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">✗</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">✗</td>
+                </tr>
+                <tr>
+                  <td style="background-color: #f4f4f4; border: 1px solid #ddd; padding: 8px;"><b>SpeechTokenizer</b></td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">50</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">✗</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">✗</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">SSL feature (HuBERT)</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">✓</td>
+                </tr>
+                <tr>
+                  <td style="background-color: #f4f4f4; border: 1px solid #ddd; padding: 8px;"><b>CodecSlime</b></td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">40 (Avg)</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">✓</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">✓ (40,50,67,80Hz options)</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">✗</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">✗</td>
+                </tr>
+                <tr>
+                  <td style="background-color: #f4f4f4; border: 1px solid #ddd; padding: 8px;"><b>Mimi</b></td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">12.5</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">✗</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">✗</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">SSL feature (WavLM)</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">✓</td>
+                </tr>
+                <tr>
+                  <td style="background-color: #f4f4f4; border: 1px solid #ddd; padding: 8px;"><b>DualCodec</b></td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">12.5/25</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">✗</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">✗</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">SSL feature (w2v-bert-2)</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">✓</td>
+                </tr>
+                <tr>
+                  <td style="background-color: #f4f4f4; border: 1px solid #ddd; padding: 8px;"><b>TaDiCodec</b></td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">6.25</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">✗</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">✗</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">Text</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">✓</td>
+                </tr>
+                <tr>
+                  <td style="background-color: #f4f4f4; border: 1px solid #ddd; padding: 8px;"><b>Phoneme Tokens</b></td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">11.7 (Avg)</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">✓</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">✗</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">-</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">-</td>
+                </tr>
+                <tr>
+                  <td style="background-color: #f4f4f4; border: 1px solid #ddd; padding: 8px;"><b>BPE Text Tokens</b></td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">4.5 (Avg)</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">✓</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">✗</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">-</td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;">-</td>
+                </tr>
+                <tr style="border-top: 2px solid #000;">
+                  <td style="background-color: #e8f4f8; border: 1px solid #ddd; padding: 8px;"><b><b>FlexiCodec</b></b></td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;"><b>6.25/8.3/12.5 (Avg)</b></td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;"><b>✓</b></td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;"><b>✓ (Any from 3 to 12.5Hz)</b></td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;"><b>ASR feature</b></td>
+                  <td style="text-align: center; border: 1px solid #ddd; padding: 8px;"><b>✓</b></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+
+        <div class="mt-8 mb-8" id="audio-quality">
+          <h4>Acoustic Testing: Low-Bitrate Audio Reconstruction Quality</h4>
+        </div>
+
+        <div class="mt-8 mb-8">
+          <!-- <h5>Vevo-Timbre <i>v.s.</i> Vevo-Voice</h5> -->
+          <p>
+            Neural audio codecs struggle to get high quality audio at low bitrates.
+            In this section, we demonstrate that FlexiCodec has a high bitrate efficiency.
+          </p>
+        </div>
+
+
+<div class="mt-8 mb-8" id="decoding-rvq1">
+  <h4>Semantic Testing: Analyzing RVQ-1 and RVQ-1:8 tokens </h4>
+</div>
+
+<div class="mt-8 mb-8">
+  <p>
+    FlexiCodec's RVQ-1 tokens are directly extracted from ASR features.
+    In this section, we demonstrate that FlexiCodec's RVQ-1 tokens (akin to semantic tokens) has higher intelligibility than 
+    semantic-distillation based codec SpeechTokenizer, as well as vanilla audio codec like DAC.
+  </p>
+</div>
+
+
+        <div class="mt-8 mb-8" id="flexicodec-tts">
+          <h4>Text-to-Speech Performance</h4>
+          <!-- <p>We randomly pick output samples from Seed-TTS-Eval set. </p> -->
+        </div>
+
+        <div class="mt-8 mb-8">
+          <div class="mx-auto text-sm text-left rtl:text-right text-gray-900" style="overflow-x: auto;">
+            <table id="tts-general-table" style="width: 120%;">
+              <thead>
+                <tr>
+                  <th style="text-align: center; width: 9%;">Text</th>
+                  <!-- <th style="text-align: center; width: 10%;">Reference Audio</th> -->
+                  <th style="text-align: center; width: 8%;">Ground Truth</th>
+                  <th style="text-align: center; width: 8%;">FlexiCodec-TTS<br>(6.25Hz AR, 50Hz NAR)</th>
+                  <th style="text-align: center; width: 8%;">FlexiCodec-TTS<br>(8.3Hz AR, 50Hz NAR)</th>
+                  <th style="text-align: center; width: 8%;">FlexiCodec-TTS<br>(12.5Hz AR, 50Hz NAR)</th>
+                  <th style="text-align: center; width: 8%;">CosyVoice</th>
+                  <th style="text-align: center; width: 8%;">FlexiCodec-TTS<br>(6.25Hz AR, 12.5Hz NAR)</th>
+                  <th style="text-align: center; width: 8%;">FlexiCodec-TTS<br>(8.3Hz AR, 12.5Hz NAR)</th>
+                  <th style="text-align: center; width: 8%;">FlexiCodec-TTS<br>(12.5Hz AR, 12.5Hz NAR)</th>
+                  <th style="text-align: center; width: 8%;">SparkTTS</th>
+                  <th style="text-align: center; width: 8%;">FireRedTTS</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="scrollable-table">
+                  <td>
+                    Give me a check for a hundred and fifty, and I'll turn over to you the forged check and quash further proceedings.
+                  </td>
+                  <td>
+                    <audio controls preload="none">
+                      <source src="tts_examples1/gt/00000.wav">
+                    </audio>
+                    <!-- Play the song from the genre Sunshine Reggae that appeals to me. -->
+                  </td>
+                  <td>
+                    <audio controls preload="none">
+                      <source src="tts_examples1/tts6hzmel/Waves/GeneralSentence/00000.wav">
+                    </audio>
+                  </td>
+                  <td>
+                    <audio controls preload="none">
+                      <source src="tts_examples1/tts8hzmel/Waves/GeneralSentence/00000.wav">
+                    </audio>
+                  </td>
+                  <td>
+                    <audio controls preload="none">
+                      <source src="tts_examples1/tts12hzmel/Waves/GeneralSentence/00000.wav">
+                    </audio>
+                  </td>
+                  <td>
+                    <audio controls preload="none">
+                      <source src="tts_examples1/cosyvoice/Waves/GeneralSentence/00000.wav">
+                    </audio>
+                  </td>
+                  <td>
+                    <audio controls preload="none">
+                      <source src="tts_examples1/tts6hzcodec/Waves/GeneralSentence/00000.wav">
+                    </audio>
+                  </td>
+                  <td>
+                    <audio controls preload="none">
+                      <source src="tts_examples1/tts8hzcodec/Waves/GeneralSentence/00000.wav">
+                    </audio>
+                  </td>
+                  <td>
+                    <audio controls preload="none">
+                      <source src="tts_examples1/tts12hzcodec/Waves/GeneralSentence/00000.wav">
+                    </audio>
+                  </td>
+                  <td>
+                    <audio controls preload="none">
+                      <source src="tts_examples1/sparktts/Waves/GeneralSentence/00000.wav">
+                    </audio>
+                  </td>
+                  <td>
+                    <audio controls preload="none">
+                      <source src="tts_examples1/fireredtts/Waves/GeneralSentence/00000.wav">
+                    </audio>
+                  </td>
+                 </tr>
+                 
+                 <!-- Row for 00001.wav -->
+                 <tr class="scrollable-table">
+                   <td>
+                     I have been here this quarter of an hour," replied La Valliere.
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/gt/00001.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts6hzmel/Waves/GeneralSentence/00001.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts8hzmel/Waves/GeneralSentence/00001.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts12hzmel/Waves/GeneralSentence/00001.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/cosyvoice/Waves/GeneralSentence/00001.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts6hzcodec/Waves/GeneralSentence/00001.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts8hzcodec/Waves/GeneralSentence/00001.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts12hzcodec/Waves/GeneralSentence/00001.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/sparktts/Waves/GeneralSentence/00001.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/fireredtts/Waves/GeneralSentence/00001.wav">
+                     </audio>
+                   </td>
+                 </tr>
+                 
+                 <!-- Row for 00002.wav -->
+                 <tr class="scrollable-table">
+                   <td>
+                     What is the tumult and rioting"? cried out the Squire, authoritatively, and he blew twice on a silver whistle which hung at his belt.
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/gt/00002.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts6hzmel/Waves/GeneralSentence/00002.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts8hzmel/Waves/GeneralSentence/00002.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts12hzmel/Waves/GeneralSentence/00002.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/cosyvoice/Waves/GeneralSentence/00002.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts6hzcodec/Waves/GeneralSentence/00002.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts8hzcodec/Waves/GeneralSentence/00002.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts12hzcodec/Waves/GeneralSentence/00002.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/sparktts/Waves/GeneralSentence/00002.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/fireredtts/Waves/GeneralSentence/00002.wav">
+                     </audio>
+                   </td>
+                 </tr>
+                 
+                 <!-- Row for 00003.wav -->
+                 <tr class="scrollable-table">
+                   <td>
+                     You have come to us threatening us with absolute destruction.
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/gt/00003.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts6hzmel/Waves/GeneralSentence/00003.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts8hzmel/Waves/GeneralSentence/00003.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts12hzmel/Waves/GeneralSentence/00003.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/cosyvoice/Waves/GeneralSentence/00003.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts6hzcodec/Waves/GeneralSentence/00003.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts8hzcodec/Waves/GeneralSentence/00003.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts12hzcodec/Waves/GeneralSentence/00003.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/sparktts/Waves/GeneralSentence/00003.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/fireredtts/Waves/GeneralSentence/00003.wav">
+                     </audio>
+                   </td>
+                 </tr>
+                 
+                 <!-- Row for 00004.wav -->
+                 <tr class="scrollable-table">
+                   <td>
+                     The sound of an imperative and uncompromising bell recalled me in due time to the regions of reality.
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/gt/00004.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts6hzmel/Waves/GeneralSentence/00004.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts8hzmel/Waves/GeneralSentence/00004.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts12hzmel/Waves/GeneralSentence/00004.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/cosyvoice/Waves/GeneralSentence/00004.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts6hzcodec/Waves/GeneralSentence/00004.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts8hzcodec/Waves/GeneralSentence/00004.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts12hzcodec/Waves/GeneralSentence/00004.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/sparktts/Waves/GeneralSentence/00004.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/fireredtts/Waves/GeneralSentence/00004.wav">
+                     </audio>
+                   </td>
+                 </tr>
+                 
+                 <!-- Row for 00005.wav -->
+                 <tr class="scrollable-table">
+                   <td>
+                     He was soft hearted and impetuous," said Beth; "and, being in love, he didn't stop to count the cost".
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/gt/00005.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts6hzmel/Waves/GeneralSentence/00005.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts8hzmel/Waves/GeneralSentence/00005.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts12hzmel/Waves/GeneralSentence/00005.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/cosyvoice/Waves/GeneralSentence/00005.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts6hzcodec/Waves/GeneralSentence/00005.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts8hzcodec/Waves/GeneralSentence/00005.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts12hzcodec/Waves/GeneralSentence/00005.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/sparktts/Waves/GeneralSentence/00005.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/fireredtts/Waves/GeneralSentence/00005.wav">
+                     </audio>
+                   </td>
+                 </tr>
+                 
+                 <!-- Row for 00006.wav -->
+                 <tr class="scrollable-table">
+                   <td>
+                     The goat's warlike spirit was roused by this successful attack.
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/gt/00006.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts6hzmel/Waves/GeneralSentence/00006.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts8hzmel/Waves/GeneralSentence/00006.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts12hzmel/Waves/GeneralSentence/00006.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/cosyvoice/Waves/GeneralSentence/00006.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts6hzcodec/Waves/GeneralSentence/00006.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts8hzcodec/Waves/GeneralSentence/00006.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts12hzcodec/Waves/GeneralSentence/00006.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/sparktts/Waves/GeneralSentence/00006.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/fireredtts/Waves/GeneralSentence/00006.wav">
+                     </audio>
+                   </td>
+                 </tr>
+                 
+                 <!-- Row for 00007.wav -->
+                 <tr class="scrollable-table">
+                   <td>
+                     His conduct and presence of mind in this emergence appeared conspicuous.
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/gt/00007.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts6hzmel/Waves/GeneralSentence/00007.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts8hzmel/Waves/GeneralSentence/00007.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts12hzmel/Waves/GeneralSentence/00007.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/cosyvoice/Waves/GeneralSentence/00007.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts6hzcodec/Waves/GeneralSentence/00007.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts8hzcodec/Waves/GeneralSentence/00007.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts12hzcodec/Waves/GeneralSentence/00007.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/sparktts/Waves/GeneralSentence/00007.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/fireredtts/Waves/GeneralSentence/00007.wav">
+                     </audio>
+                   </td>
+                 </tr>
+                 
+                 <!-- Row for 00008.wav -->
+                 <tr class="scrollable-table">
+                   <td>
+                     The Nautilus nearly perishes in the Antarctic and Nemo sinks into a growing depression.
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/gt/00008.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts6hzmel/Waves/GeneralSentence/00008.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts8hzmel/Waves/GeneralSentence/00008.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts12hzmel/Waves/GeneralSentence/00008.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/cosyvoice/Waves/GeneralSentence/00008.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts6hzcodec/Waves/GeneralSentence/00008.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts8hzcodec/Waves/GeneralSentence/00008.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts12hzcodec/Waves/GeneralSentence/00008.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/sparktts/Waves/GeneralSentence/00008.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/fireredtts/Waves/GeneralSentence/00008.wav">
+                     </audio>
+                   </td>
+                 </tr>
+                 
+                 <!-- Row for 00009.wav -->
+                 <tr class="scrollable-table">
+                   <td>
+                     Jack would become Eva's happy husband, and would remain amidst the hurried duties of the eager world.
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/gt/00009.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts6hzmel/Waves/GeneralSentence/00009.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts8hzmel/Waves/GeneralSentence/00009.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts12hzmel/Waves/GeneralSentence/00009.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/cosyvoice/Waves/GeneralSentence/00009.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts6hzcodec/Waves/GeneralSentence/00009.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts8hzcodec/Waves/GeneralSentence/00009.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/tts12hzcodec/Waves/GeneralSentence/00009.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/sparktts/Waves/GeneralSentence/00009.wav">
+                     </audio>
+                   </td>
+                   <td>
+                     <audio controls preload="none">
+                       <source src="tts_examples1/fireredtts/Waves/GeneralSentence/00009.wav">
+                     </audio>
+                   </td>
+                 </tr>
+ 
+               </tbody>
+            </table>
+          </div>
+
+        </div>
+
+          
+        <!-- <div style="display: flex; justify-content: center; align-items: center; width: 100%;">
+          <figure>
+            <img src="tts_result.png" alt="TTS Result Visualization" style="max-width: 600px; height: auto;">
+            <figcaption>Figure: TTS results.</figcaption>
+          </figure>
+        </div> -->
+
+        <!-- <div class="mt-8 mb-8">
+          <h4 id="open-source">Open-Source</h4>
+          <p>
+            We open-source DualCodec 12.5Hz and 25Hz, including training codes. It will be public after the anonymous review period.
+            We are working on open-sourcing DualCodec-based SLMs—DualCodec-VALLE, DualCodec-MaskGCT, and DualCodec-FlattenedAR, with more models in planning. 
+            These models offer a range of configurations, including autoregressive and non-autoregressive approaches and different frame-rates, supporting broader exploration of speech language modeling.
+          </p>        </div> -->
+
+
+
+
+        <!-- <div class="mt-8 mb-8">
+          <h4 id="citation">Citation</h4>
+          <p>
+            Coming soon...
+          </p>
+        </div> -->
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showVCPage(domain) {
+      var rows = document.querySelectorAll("#vc-table tbody tr");
+      for (var i = 0; i < rows.length; i++) {
+        rows[i].style.display = 'none';
+        if (rows[i].classList.contains(domain)) {
+          rows[i].style.display = '';
+        }
+      }
+    }
+
+    function showASRACPage(domain) {
+      var rows = document.querySelectorAll("#asrac-table tbody tr");
+      for (var i = 0; i < rows.length; i++) {
+        rows[i].style.display = 'none';
+        if (rows[i].classList.contains(domain)) {
+          rows[i].style.display = '';
+        }
+      }
+    }
+
+    function showVoiceShopPage(domain) {
+      var rows = document.querySelectorAll("#voiceshop-table tbody tr");
+      for (var i = 0; i < rows.length; i++) {
+        rows[i].style.display = 'none';
+        if (rows[i].classList.contains(domain)) {
+          rows[i].style.display = '';
+        }
+      }
+    }
+
+    function showConvSpeakPage(domain) {
+      var rows = document.querySelectorAll("#convertandspeak-table tbody tr");
+      for (var i = 0; i < rows.length; i++) {
+        rows[i].style.display = 'none';
+        if (rows[i].classList.contains(domain)) {
+          rows[i].style.display = '';
+        }
+      }
+    }
+
+    function showEmovoxPage(domain) {
+      var rows = document.querySelectorAll("#emovox-table tbody tr");
+      for (var i = 0; i < rows.length; i++) {
+        rows[i].style.display = 'none';
+        if (rows[i].classList.contains(domain)) {
+          rows[i].style.display = '';
+        }
+      }
+    }
+
+    function showTTSAccentPage(domain) {
+      var rows = document.querySelectorAll("#tts-accent-table tbody tr");
+      for (var i = 0; i < rows.length; i++) {
+        rows[i].style.display = 'none';
+        if (rows[i].classList.contains(domain)) {
+          rows[i].style.display = '';
+        }
+      }
+    }
+
+    function showTTSEmotionPage(domain) {
+      var rows = document.querySelectorAll("#tts-emotion-table tbody tr");
+      for (var i = 0; i < rows.length; i++) {
+        rows[i].style.display = 'none';
+        if (rows[i].classList.contains(domain)) {
+          rows[i].style.display = '';
+        }
+      }
+    }
+
+    function showTTSGeneralPage(domain) {
+      var rows = document.querySelectorAll("#tts-general-table tbody tr");
+      for (var i = 0; i < rows.length; i++) {
+        rows[i].style.display = 'none';
+        if (rows[i].classList.contains(domain)) {
+          rows[i].style.display = '';
+        }
+      }
+    }
+
+
+    window.onload = function () {
+      showVCPage('vc-clean');
+      showASRACPage('asrac-hindi2american');
+      showVoiceShopPage('voiceshop-american2hindi');
+      showConvSpeakPage('convertandspeak-2');
+      showEmovoxPage('emovox-neutral2angry-1');
+      showTTSAccentPage('tts-accent-arabic');
+      showTTSEmotionPage('tts-emotion-angry');
+      showTTSGeneralPage('scrollable-table')
+    };
+
+  </script>
+
+</body>
+
+</html>
