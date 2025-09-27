@@ -1,4 +1,4 @@
-This is the blog repository for FlexiCodec. We thank the authors of XYTokenizer for the original blog template.
+This is the blog repository for FlexiCodec. We thank the authors of XYTokenizer and the Distill Template for the original blog template.
 
 ```python
 python -m http.server <port>
